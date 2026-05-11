@@ -21,15 +21,15 @@ fi
 python -u run.py \
   --task_name long_term_forecast \
   --is_training 1 \
-  --model_id ETTm1_96_96 \
+  --model_id ETTm1_96_720 \
   --model $model_name \
   --data ETTm1\
   --root_path ./dataset/ETT-small/ \
   --data_path ETTm1.csv \
   --features M \
-  --seq_len 512 \
+    --seq_len 96 \
   --label_len 0 \
-  --pred_len 96 \
+  --pred_len 720 \
   --enc_in 7 \
   --dec_in 7 \
   --c_out 7 \

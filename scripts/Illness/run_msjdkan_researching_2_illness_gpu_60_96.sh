@@ -1,9 +1,5 @@
 # Lấy đường dẫn gốc
 model_name=CAW_KAN
-wavelet_type=mexican_hat
-num_wavelets=8
-grid_size=3.0
-kernel_size=7
 
 # Ban đầu d_model = 32, d_ff = 64
 
@@ -21,25 +17,29 @@ fi
 python -u run.py \
   --task_name long_term_forecast \
   --is_training 1 \
-  --model_id ETTm1_96_96 \
+    --model_id illness_96_60 \
   --model $model_name \
-  --data ETTm1\
-  --root_path ./dataset/ETT-small/ \
-  --data_path ETTm1.csv \
+    --data illness\
+    --root_path ./dataset/illness/ \
+    --data_path national_illness.csv \
+    --freq w \
   --features M \
-  --seq_len 512 \
+  --target OT \
+  --seq_len 96 \
   --label_len 0 \
-  --pred_len 96 \
-  --enc_in 7 \
-  --dec_in 7 \
-  --c_out 7 \
-  --d_model 16 \
-  --e_layers 2 \
+  --pred_len 60 \
+    --enc_in 7 \
+    --dec_in 7 \
+    --c_out 7 \
+  --d_model 128 \
+  --n_heads 4 \
+  --e_layers 3 \
   --d_layers 1 \
-  --d_ff 32 \
+  --d_ff 256 \
   --factor 1 \
   --embed timeF \
   --dropout 0.1 \
+  --use_amp \
   --channel_independence 1 \
   --batch_size 32 \
   --learning_rate 0.001 \
@@ -48,8 +48,4 @@ python -u run.py \
   --weight_decay 1e-4 \
   --lradj 'cosine' \
   --pct_start 0.2 \
-  --wavelet_type $wavelet_type \
-  --num_wavelets $num_wavelets \
-  --grid_size $grid_size \
-    --kernel_size $kernel_size \
   --des Exp_CAW_KAN_researching

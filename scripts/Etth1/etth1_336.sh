@@ -27,7 +27,7 @@ python -u run.py \
   --features M \
   --target OT \
   --freq h \
-  --seq_len 96 \
+  --seq_len 512 \
   --label_len 0 \
   --pred_len 336 \
   --enc_in 7 \

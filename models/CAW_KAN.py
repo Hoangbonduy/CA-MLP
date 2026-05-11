@@ -50,9 +50,10 @@ class ContextAwareWavKANBlock(nn.Module):
         # Mạng sẽ tự động điều chỉnh scale/translation để bắt cả Trend và Spike
         kan_out = self.adaptive_kan(x_context)
         
+        kan_out = self.dropout(kan_out)
+
         # --- BƯỚC 3: Tính Residual cho Block sau ---
         next_x = self.norm2(x_context + kan_out) # Add & Norm
-        next_x = self.dropout(next_x)
 
         if debug_store is not None and block_idx is not None:
             debug_store[f"Block_{block_idx:02d}_KAN_Out"] = kan_out.clone()

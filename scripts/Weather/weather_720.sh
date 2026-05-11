@@ -27,9 +27,8 @@ python -u run.py \
     --root_path ./dataset/weather/ \
     --data_path weather.csv \
     --freq t \
-  --features M \
+    --seq_len 512 \
   --target OT \
-  --seq_len 96 \
   --label_len 0 \
   --pred_len 720 \
     --enc_in 21 \

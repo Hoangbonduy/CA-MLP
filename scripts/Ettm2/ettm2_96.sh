@@ -27,7 +27,7 @@ python -u run.py \
   --root_path ./dataset/ETT-small/ \
   --data_path ETTm2.csv \
   --features M \
-  --seq_len 96 \
+    --seq_len 512 \
   --label_len 0 \
   --pred_len 96 \
   --enc_in 7 \

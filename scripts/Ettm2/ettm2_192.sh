@@ -31,7 +31,7 @@ python -u run.py \
   --label_len 0 \
   --pred_len 192 \
   --enc_in 7 \
-  --dec_in 7 \
+    --seq_len 512 \
   --c_out 7 \
   --d_model 16 \
   --n_heads 4 \

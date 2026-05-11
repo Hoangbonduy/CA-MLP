@@ -9,7 +9,7 @@ import math
 plt.switch_backend('agg')
 
 
-def adjust_learning_rate(optimizer, scheduler, epoch, args):
+def adjust_learning_rate(optimizer, scheduler, epoch, args, printout=True):
     # lr = args.learning_rate * (0.2 ** (epoch // 2))
     if args.lradj == 'type1':
         lr_adjust = {epoch: args.learning_rate * (0.5 ** ((epoch - 1) // 1))}
@@ -28,7 +28,8 @@ def adjust_learning_rate(optimizer, scheduler, epoch, args):
         lr = lr_adjust[epoch]
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
-        print('Updating learning rate to {}'.format(lr))
+        if printout:
+            print('Updating learning rate to {}'.format(lr))
 
 
 class EarlyStopping:

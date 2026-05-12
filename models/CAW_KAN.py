@@ -38,14 +38,8 @@ class ContextAwareWavKANBlock(nn.Module):
         x_context = self.context_conv(x_context)
         x_context = x_context.transpose(1, 2)
 
-        if debug_store is not None and block_idx is not None:
-            debug_store[f"Block_{block_idx:02d}_After_ContextConv"] = x_context.clone()
-
         x_context = self.norm1(x + x_context) # Residual connection 1
 
-        if debug_store is not None and block_idx is not None:
-            debug_store[f"Block_{block_idx:02d}_After_Norm1"] = x_context.clone()
-        
         # --- BƯỚC 2: Truyền trực tiếp vào Wav-KAN ---
         # Mạng sẽ tự động điều chỉnh scale/translation để bắt cả Trend và Spike
         kan_out = self.adaptive_kan(x_context)
@@ -55,11 +49,7 @@ class ContextAwareWavKANBlock(nn.Module):
         # --- BƯỚC 3: Tính Residual cho Block sau ---
         next_x = self.norm2(x_context + kan_out) # Add & Norm
 
-        if debug_store is not None and block_idx is not None:
-            debug_store[f"Block_{block_idx:02d}_KAN_Out"] = kan_out.clone()
-            debug_store[f"Block_{block_idx:02d}_Next_X"] = next_x.clone()
-
-        return kan_out, next_x
+        return next_x
 
 class Model(nn.Module):
     def __init__(self, configs):
@@ -72,8 +62,6 @@ class Model(nn.Module):
         # --- 1. Embedding ---
         self.enc_embedding = DataEmbedding_wo_pos(c_in=1, d_model=configs.d_model, freq = getattr(configs, 'freq', 'h'), dropout=configs.dropout)
         self.normalize_layer = Normalize(configs.enc_in, affine=True, non_norm=False, subtract_last=False)
-        
-        # --- ĐÃ XÓA J_LIST ---
 
         # --- 2. Encoder (Stacked Direct Wav-KAN Blocks) ---
         self.blocks = nn.ModuleList([
@@ -103,15 +91,11 @@ class Model(nn.Module):
             x_mark_reshaped = x_mark_enc.unsqueeze(1).repeat(1, C, 1, 1).reshape(B * C, T, -1)
         else:
             x_mark_reshaped = None
-        enc_out = self.enc_embedding(x_reshaped, x_mark_reshaped)
-        
-        curr_input = enc_out
+        curr_input = self.enc_embedding(x_reshaped, x_mark_reshaped)
 
         # 3. Encoding Loop
         for i, block in enumerate(self.blocks):
-            kan_out, next_input = block(curr_input, debug_store=debug_store, block_idx=i)
-            # Cập nhật đầu vào cho block tiếp theo (không cộng dồn kan_out nữa)
-            curr_input = next_input
+            curr_input = block(curr_input, debug_store=None, block_idx=i)
             
         # 4. Decoding / Projection
         # BƯỚC 1: Predict (Kéo dãn độ dài từ Seq_len sang Pred_len nhưng vẫn giữ không gian D_model)
@@ -123,9 +107,6 @@ class Model(nn.Module):
         # 5. Reshape & Denormalize
         dec_out = dec_out.reshape(B, C, self.pred_len).permute(0, 2, 1)
         dec_out = self.normalize_layer(dec_out, 'denorm')
-        
-        if debug_store is not None:
-            debug_store["Final_Output_Projection"] = dec_out.clone()
         
         return dec_out
 

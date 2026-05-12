@@ -2,6 +2,10 @@
 
 # Mảng chứa thông tin các dataset: Tên_Dataset | Tên_File | Freq | Số_đặc_trưng | e_layers | grid_size | kernel_size
 declare -a datasets=(
+    "ETTh1 ETTh1.csv h 7 2 3.0 3"
+    "ETTh2 ETTh2.csv h 7 3 3.0 3"
+    "ETTm1 ETTm1.csv t 7 2 3.0 7"
+    "ETTm2 ETTm2.csv t 7 3 4.0 7"
     "custom weather.csv 10m 21 3 3.0 3" # weather dùng data="custom"
 )
 
@@ -70,6 +74,7 @@ for ds_info in "${datasets[@]}"; do
       --num_wavelets $num_wavelets \
       --grid_size $grid_size \
       --kernel_size $kernel_size \
+      --no_use_gpu \
       --des Exp_CAW_KAN_researching
       
     echo "Hoàn tất Train & Evaluate cho $model_id_prefix!"

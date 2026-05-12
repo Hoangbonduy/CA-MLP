@@ -71,18 +71,30 @@ class AdaptiveWaveletKANLayer(nn.Module):
             return torch.sinc(z / math.pi) * window
 
     def forward(self, x):
-        # x input: [Batch, Seq, Channel]
+        # x input: [Batch, Seq, Channel] (Thực chất Channel ở đây là d_model = 16)
         
-        # --- Chỉ tính toán một nhánh Wavelet duy nhất ---
-        x_expanded = x.unsqueeze(-1) # -> [Batch, Seq, Channel, 1]
+        # Khởi tạo tensor output rỗng cùng kích thước với x
+        out = torch.zeros_like(x)
         
-        # Tránh chia cho 0
-        z = (x_expanded - self.b) / (torch.abs(self.a) + 1e-6)
-        psi = self._compute_wavelet_response(z)
+        # Lấy trọng số w ra: [in_features, num_wavelets] (16, 8)
+        w = self.w 
         
-        w = self.w.view(1, 1, self.in_features, self.num_wavelets)
-        
-        # Output trực tiếp từ tổ hợp tuyến tính của Wavelet
-        out = (w * psi).sum(dim=-1) # Output: [Batch, Seq, Channel]
-        
+        # Lặp qua từng wavelet (8 vòng lặp)
+        for k in range(self.num_wavelets):
+            # Lấy tâm b và độ giãn a của wavelet thứ k
+            b_k = self.b[0, 0, :, k] # shape: [in_features]
+            a_k = self.a[0, 0, :, k] # shape: [in_features]
+            
+            # Tính z cho riêng wavelet thứ k
+            # Kích thước tensor lúc này CHỈ LÀ [Batch*Channel, Seq, D_model] -> Giảm 8 lần RAM!
+            z_k = (x - b_k) / (torch.abs(a_k) + 1e-6)
+            
+            # Tính hàm kích hoạt phi tuyến cho sóng k
+            psi_k = self._compute_wavelet_response(z_k)
+            
+            # Nhân với trọng số w của wavelet thứ k và cộng dồn
+            # psi_k: [Batch*Channel, Seq, D_model]
+            # w[:, k]: [in_features] -> PyTorch tự động broadcast cho khớp
+            out += psi_k * w[:, k]
+            
         return out

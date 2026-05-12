@@ -1,6 +1,5 @@
 import os
 import sys
-import importlib
 from types import SimpleNamespace
 
 import torch
@@ -35,7 +34,7 @@ COMMON_CONFIG = {
 	"features": "M",
 	"embed": "timeF",
 	"freq": "h",
-	"seq_len": 96,
+	"seq_len": 512,
 	"label_len": 0,
 	"pred_len": 96,
 	"enc_in": 7,
@@ -117,19 +116,7 @@ def _to_namespace(config_dict):
 
 
 def _count_params(model: nn.Module):
-	total = sum(p.numel() for p in model.parameters())
-	trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-	return total, trainable
-
-
-def _humanize_number(value: float):
-	if value >= 1e9:
-		return f"{value / 1e9:.3f}G"
-	if value >= 1e6:
-		return f"{value / 1e6:.3f}M"
-	if value >= 1e3:
-		return f"{value / 1e3:.3f}K"
-	return f"{value:.0f}"
+	return sum(p.numel() for p in model.parameters())
 
 
 def _time_feature_dim(freq: str):
@@ -147,20 +134,13 @@ def _time_feature_dim(freq: str):
 def _build_dummy_x_mark(config):
 	if getattr(config, "embed", "timeF") == "timeF":
 		time_dim = _time_feature_dim(config.freq)
-		return torch.randn(config.batch_size, config.seq_len, time_dim)
+		# Use bounded values to avoid invalid indices if a fixed temporal embedding is used.
+		return torch.rand(config.batch_size, config.seq_len, time_dim)
 	# For non-timeF embeddings, x_mark is expected to carry integer calendar fields.
 	return torch.zeros(config.batch_size, config.seq_len, 5, dtype=torch.long)
 
 
 def profile_one(config):
-	try:
-		thop_module = importlib.import_module("thop")
-	except ModuleNotFoundError as exc:
-		raise RuntimeError(
-			"Missing dependency 'thop'. Install with: python -m pip install thop"
-		) from exc
-	profile_fn = getattr(thop_module, "profile")
-
 	model = Model(config)
 	model.eval()
 
@@ -169,22 +149,19 @@ def profile_one(config):
 	dummy_x_mark = _build_dummy_x_mark(config)
 
 	with torch.no_grad():
-		macs, _ = profile_fn(wrapped_model, inputs=(dummy_x, dummy_x_mark), verbose=False)
+		_ = wrapped_model(dummy_x, dummy_x_mark)
 
-	total_params, trainable_params = _count_params(model)
+	total_params = _count_params(model)
 	return {
 		"dataset": config.data,
 		"batch_size": config.batch_size,
 		"params_total": total_params,
-		"params_trainable": trainable_params,
-		"macs": macs,
 	}
 
 
 def print_results(rows):
 	header = (
-		f"{'Dataset':<8} {'Batch':<7} {'Params(total)':>15} "
-		f"{'Params(train)':>15} {'MACs':>15} {'MACs(human)':>12}"
+		f"{'Dataset':<8} {'Batch':<7} {'Params(total)':>15}"
 	)
 	print(header)
 	print("-" * len(header))
@@ -192,10 +169,7 @@ def print_results(rows):
 		print(
 			f"{row['dataset']:<8} "
 			f"{row['batch_size']:<7d} "
-			f"{row['params_total']:>15,} "
-			f"{row['params_trainable']:>15,} "
-			f"{int(row['macs']):>15,} "
-			f"{_humanize_number(row['macs']):>12}"
+			f"{row['params_total']:>15,}"
 		)
 
 

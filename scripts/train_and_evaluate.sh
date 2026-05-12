@@ -6,7 +6,6 @@ declare -a datasets=(
     "ETTh2 ETTh2.csv h 7 3 3.0 3"
     "ETTm1 ETTm1.csv t 7 2 3.0 7"
     "ETTm2 ETTm2.csv t 7 3 4.0 7"
-    "custom weather.csv 10m 21 3 3.0 3" # weather dùng data="custom"
 )
 
 # Các tham số gốc

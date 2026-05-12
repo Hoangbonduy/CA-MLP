@@ -221,6 +221,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
+        # ================= THÊM BIẾN ĐO LƯỜNG =================
+        import time
+        inference_times = []
+        if self.args.use_gpu:
+            torch.cuda.reset_peak_memory_stats(self.device) # Reset bộ đếm memory
+        # ======================================================
+
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
@@ -233,12 +240,23 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
                 dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+                
+                # --- BẮT ĐẦU ĐO THỜI GIAN ---
+                batch_start_time = time.time()
+                
                 # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                 else:
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+                
+                # Dừng đồng bộ GPU nếu dùng CUDA để tính thời gian chính xác
+                if self.args.use_gpu:
+                    torch.cuda.synchronize(self.device)
+                
+                # --- KẾT THÚC ĐO THỜI GIAN ---
+                inference_times.append(time.time() - batch_start_time)
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, -self.args.pred_len:, :]
@@ -269,12 +287,22 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
                     visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
 
+        # ================= TỔNG HỢP KẾT QUẢ ĐO LƯỜNG =================
+        total_inference_time = np.sum(inference_times)
+        avg_batch_inference_time = np.mean(inference_times)
+        peak_memory = 0.0
+        if self.args.use_gpu:
+            peak_memory = torch.cuda.max_memory_allocated(self.device) / (1024 ** 2) # Tính bằng MB
+
+        print(f"\n[PERFORMANCE] Total Inference Time: {total_inference_time:.4f} s")
+        print(f"[PERFORMANCE] Avg Inference Time / Batch: {avg_batch_inference_time:.6f} s")
+        print(f"[PERFORMANCE] Peak GPU Memory Allocated: {peak_memory:.2f} MB\n")
+        # =============================================================
+
         preds = np.concatenate(preds, axis=0)
         trues = np.concatenate(trues, axis=0)
-        print('test shape:', preds.shape, trues.shape)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
-        print('test shape:', preds.shape, trues.shape)
 
         # result save
         folder_path = './results/' + setting + '/'
@@ -292,16 +320,19 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     print("calculating dtw iter:", i)
                 d, _, _, _ = accelerated_dtw(x, y, dist=manhattan_distance)
                 dtw_list.append(d)
-            dtw = np.array(dtw_list).mean()
+            dtw_val = np.array(dtw_list).mean()
         else:
-            dtw = 'Not calculated'
+            dtw_val = 'Not calculated'
 
         mae, mse, rmse, mape, mspe = metric(preds, trues)
-        print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
+        print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw_val))
+        
+        # Lưu kết quả metric vào file text
         f = open("result_long_term_forecast.txt", 'a')
         f.write(setting + "  \n")
-        f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
-        f.write('\n')
+        f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw_val) + '\n')
+        # Lưu thêm Performance Metrics
+        f.write(f'Total Time: {total_inference_time:.4f}s, Avg Batch Time: {avg_batch_inference_time:.6f}s, Peak Mem: {peak_memory:.2f}MB\n')
         f.write('\n')
         f.close()
 

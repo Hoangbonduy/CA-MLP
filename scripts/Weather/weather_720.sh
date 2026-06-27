@@ -1,8 +1,6 @@
 # Lấy đường dẫn gốc
-model_name=CAW_KAN
-wavelet_type=mexican_hat
-num_wavelets=8
-grid_size=3.0
+model_name=CA_MLP
+num_wavelets=0.5
 kernel_size=3
 
 # Ban đầu d_model = 32, d_ff = 64
@@ -21,7 +19,7 @@ fi
 python -u run.py \
   --task_name long_term_forecast \
   --is_training 1 \
-    --model_id weather_96_720 \
+    --model_id weather_720_720 \
   --model $model_name \
     --data weather\
     --root_path ./dataset/weather/ \
@@ -42,6 +40,7 @@ python -u run.py \
   --factor 1 \
   --embed timeF \
   --dropout 0.1 \
+  --use_amp \
   --channel_independence 1 \
   --batch_size 32 \
   --learning_rate 0.001 \
@@ -50,8 +49,6 @@ python -u run.py \
   --weight_decay 1e-4 \
   --lradj 'cosine' \
   --pct_start 0.2 \
-  --wavelet_type $wavelet_type \
   --num_wavelets $num_wavelets \
-  --grid_size $grid_size \
   --kernel_size $kernel_size \
   --des Exp_CAW_KAN_researching

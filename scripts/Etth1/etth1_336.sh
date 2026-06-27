@@ -1,8 +1,6 @@
 # Lấy đường dẫn gốc
-model_name=CAW_KAN
-wavelet_type=mexican_hat
-num_wavelets=8
-grid_size=3.0
+model_name=CA_MLP
+num_wavelets=0.5
 kernel_size=3
 
 # Tạo thư mục logs nếu chưa có
@@ -14,7 +12,7 @@ if [ ! -d "./logs/LongForecasting" ]; then
     mkdir ./logs/LongForecasting
 fi
 
-# Chạy thử nghiệm CAW_KAN
+# Chạy thử nghiệm CA_MLP
 # Anti-overfit: giảm d_model, tăng dropout, thêm weight_decay, gradient clipping, cosine LR
 python -u run.py \
   --task_name long_term_forecast \
@@ -49,8 +47,6 @@ python -u run.py \
   --weight_decay 1e-4 \
   --lradj 'cosine' \
   --pct_start 0.2 \
-  --wavelet_type $wavelet_type \
-    --num_wavelets $num_wavelets \
-  --grid_size $grid_size \
+  --num_wavelets $num_wavelets \
   --kernel_size $kernel_size \
-  --des Exp_CAW_KAN_researching
+    --des Exp_CA_MLP_researching

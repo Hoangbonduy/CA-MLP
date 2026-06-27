@@ -1,8 +1,6 @@
 # Lấy đường dẫn gốc
-model_name=CAW_KAN
-wavelet_type=mexican_hat
-num_wavelets=8
-grid_size=3.0
+model_name=CA_MLP
+num_wavelets=0.5
 kernel_size=3
 
 # Ban đầu d_model = 32, d_ff = 64
@@ -51,8 +49,6 @@ python -u run.py \
   --weight_decay 1e-4 \
   --lradj 'cosine' \
   --pct_start 0.2 \
-  --wavelet_type $wavelet_type \
   --num_wavelets $num_wavelets \
-  --grid_size $grid_size \
   --kernel_size $kernel_size \
   --des Exp_CAW_KAN_researching

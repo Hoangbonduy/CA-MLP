@@ -18,15 +18,6 @@ from utils.augmentation import run_augmentation, run_augmentation_single
 
 warnings.filterwarnings('ignore')
 
-class LogCoshLoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, y_pred, y_true):
-        diff = y_pred - y_true
-        # Dùng công thức ổn định số học (tránh tràn việt do sinh/cosh quá lớn)
-        return torch.mean(diff + F.softplus(-2.0 * diff) - math.log(2.0))
-
 class Exp_Long_Term_Forecast(Exp_Basic):
     def __init__(self, args):
         super(Exp_Long_Term_Forecast, self).__init__(args)
@@ -51,10 +42,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        # criterion = nn.MSELoss()
-        criterion = LogCoshLoss()
+        criterion = nn.MSELoss()
 
-        # criterion = nn.HuberLoss(delta=1.0)
         return criterion
  
 

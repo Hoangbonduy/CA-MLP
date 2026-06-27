@@ -1,4 +1,4 @@
-1. Trên máy tính
+# 1. Trên máy tính
 
 ## Cài đặt WSL (Nếu là Windows)
 Hướng dẫn cài đặt: https://learn.microsoft.com/en-us/windows/wsl/install
@@ -46,7 +46,7 @@ python CA-MLP/utils/parameter.py
    + noconv1d: Loại bỏ lớp tích chập 1 chiều
    + noresidualconnection: Loại bỏ kết nối phần dư
 
-2. Trên google colab
+# 2. Trên google colab
 - git clone https://github.com/Hoangbonduy/CA-MLP.git
 - Tải thư mục CA-MLP lên google drive
 - Chạy ca-mlp.ipynb trong thư mục notebook

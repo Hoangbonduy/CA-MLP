@@ -50,3 +50,15 @@ python CA-MLP/utils/parameter.py
 - git clone https://github.com/Hoangbonduy/CA-MLP.git
 - Tải thư mục CA-MLP lên google drive
 - Chạy ca-mlp.ipynb trong thư mục notebook
+
+## Các file notebook:
+- ca-mlp-hiddendimMLP.ipynb: Phân tích kích thước lớp không gian ẩn trong MLP
+- ca-mlp-kernelsize.ipynb: Phân tích kích thước kênh của lớp tích chập 1 chiều (Conv1d)
+- ca-mlp-lookbackwindow.ipynb: Phân tích độ dài cửa sổ đầu vào của mô hình
+- ca-mlp-noconv1d.ipynb: Loại bỏ lớp tích chập 1 chiều
+- ca-mlp-nomlp.ipynb: Loại bỏ lớp MLP
+- ca-mlp-noresidualconnection.ipynb: Loại bỏ lớp tích chập 1 chiều
+- ca-mlp-numblocks_etth1_etth2.ipynb: Phân tích số lượng khối của dữ liệu ETTh1 và ETTh2
+- ca-mlp-numblocks_ettm1.ipynb: Phân tích số lượng khối của dữ liệu ETTm1
+- ca-mlp-numblocks_ettm2.ipynb: Phân tích số lượng khối của dữ liệu ETTm2
+- ca-mlp.ipynb: Kết quả chính của mô hình.
